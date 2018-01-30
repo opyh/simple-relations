@@ -8,3 +8,4 @@ suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
 
 [ignore]
 .*/build/.*
+.*/lib/.*
