@@ -1,9 +1,9 @@
 // @flow
 
-import Document from '../../src/Document';
-import type { HasManyRelation, BelongsToRelation } from '../../src/Relations';
-import Model from '../../src/Model';
+import { Document, Model } from '../../src';
+import type { HasManyRelation, BelongsToRelation } from '../../src';
 import type { MongoCompatibleCollection } from '../../src/MongoInterface';
+
 import Company, { Companies } from './Company';
 import Transaction, { Transactions } from './Transaction';
 import createMockCollection from './createMockCollection';

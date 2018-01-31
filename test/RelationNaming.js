@@ -7,29 +7,28 @@ import Transaction, { Transactions } from './fixtures/Transaction';
 import Company, { Companies } from './fixtures/Company';
 
 const account = Accounts.findOne();
-
-test('name', t => {
-	t.is(account.owner.name, 'owner');
-});
+if (!account) throw new Error('Mock account must exist');
+const owner = account.owner;
+if (!owner) throw new Error('Mock account must have owner relation');
 
 test('human readable name', t => {
-	t.is(account.owner.humanName, 'Owner');
+	t.is(owner.humanName, 'Owner');
 });
 
 test('human readable singular name', t => {
-	t.is(account.owner.humanNameSingular, 'Owner');
+	t.is(owner.humanNameSingular, 'Owner');
 });
 
 test('human readable plural name', t => {
-	t.is(account.owner.humanNamePlural, 'Owners');
+	t.is(owner.humanNamePlural, 'Owners');
 });
 
 test('human readable collection name', t => {
-	t.is(account.owner.humanCollectionName(), 'Companies');
+	t.is(owner.humanCollectionName(), 'Companies');
 });
 
 test('human readable collection name in singular', t => {
-	t.is(account.owner.humanCollectionNameSingular(), 'Company');
+	t.is(owner.humanCollectionNameSingular(), 'Company');
 });
 
 test('warns when constructing a Document with a property named like a has-many relation', t => {
@@ -48,6 +47,6 @@ test('warns when constructing a Document with a property named like a belongs-to
 	t.is(error.message, 'Cannot construct Document: ‘owner’ is no valid property, as there is a belongs-to relation with the same name. Did you mean to use ‘ownerId’?');
 });
 
-test.todo('supports a help text');
+// test.todo('supports a help text');
 
-test.todo('collection definition');
+// test.todo('collection definition');

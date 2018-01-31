@@ -3,11 +3,13 @@
 export type MongoCompatibleCursor<T> = {
   fetch(): T[],
   forEach(f: (T => void)): void,
-  map<ResultT>(f: (T => ResultT)): ResultT[],
+  map<U>(callbackfn: (value: T, index: number, array: any[]) => U, thisArg?: any): U[],
 };
 
 export type MongoCompatibleCollection<T> = {
   _name: string,
-  findOne: (selector?: {}, options?: {}) => ?T,
-  find: (selector?: {}, options?: {}) => MongoCompatibleCursor<T>,
+  findOne: (selector?: {} | string, options?: {}) => ?T,
+  find: (selector?: {} | string, options?: {}) => MongoCompatibleCursor<T>,
 };
+
+[].map

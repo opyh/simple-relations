@@ -1,7 +1,7 @@
 {
-  "name": "simple-relations",
+  "name": "simple-mongo-relations",
   "version": "1.0.0",
-  "description": "Define SimpleSchemas for relational data.",
+  "description": "Define relations between MongoDB documents and get simple-to-use helpers.",
   "main": "lib/index.js",
   "repository": {
     "type": "git",
@@ -41,12 +41,19 @@
     "prepublish-copy-flow-info": "flow-copy-source src lib",
     "flow": "flow-bin"
   },
-	"ava": {
-    "require": ["babel-register"],
-		"babel": "inherit"
-	},
-	"babel": {
-    "presets": ["@ava/stage-4"],
-    "plugins": ["transform-class-properties", "transform-flow-strip-types"]
-	}
+  "ava": {
+    "require": [
+      "babel-register"
+    ],
+    "babel": "inherit"
+  },
+  "babel": {
+    "presets": [
+      "@ava/stage-4"
+    ],
+    "plugins": [
+      "transform-class-properties",
+      "transform-flow-strip-types"
+    ]
+  }
 }

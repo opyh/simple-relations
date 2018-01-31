@@ -11,7 +11,9 @@ import type {
 
 
 // Only supports very simple selectors.
-function isMatchingSelector(selector, doc): boolean {
+function isMatchingSelector(selector: {} | string, doc): boolean {
+  if (typeof selector === 'string') return doc._id === selector;
+  if (typeof selector !== 'object') throw new Error('Selector must be an object or a string');
   const keys = Object.keys(selector);
   const result = !keys.find(key => {
     const expectedValue = selector[key];
@@ -46,20 +48,22 @@ export default function createMockCollection<T: Document>(
   return {
     _name: name,
 
-    findOne(selector?: {}, options?: {}): ?T {
+    findOne(selector?: {} | string, options?: {}): ?T {
       if (!selector) return idsToDocuments[Object.keys(idsToDocuments)[0]];
       if (typeof selector === 'string') return idsToDocuments[selector];
       if (typeof selector._id === 'string') return idsToDocuments[selector._id];
       return null;
     },
 
-    find(selector?: {} = {}, options?: {} = {}): MongoCompatibleCursor<T> {
-      const filteredDocuments = documents
+    find(selector?: {} | string = {}, options?: {} = {}): MongoCompatibleCursor<T> {
+      const filteredDocuments: T[] = documents
         .filter(doc => isMatchingSelector(selector, doc));
       return {
         fetch: () => filteredDocuments,
         forEach: filteredDocuments.forEach.bind(filteredDocuments),
-        map: filteredDocuments.map.bind(filteredDocuments),
+        map<U>(callbackfn: (value: T, index: number, array: any[]) => U, thisArg?: any): U[] {
+          return filteredDocuments.map(callbackfn);
+        },
       };
     }
   };

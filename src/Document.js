@@ -25,12 +25,14 @@ import {
 } from './Relations';
 
 
-
+// Useful if somebody forgets to add an 'Id' suffix to their foreign key.
+// Memoized for speed.
 const addIdSuffixIfNecessary = memoize(propertyName => {
   return propertyName.match(/Id$/) ? propertyName : `${propertyName}Id`;
 });
 
-// Encapsulation of a MongoDB document with its relations (as properties).
+
+// Represents a MongoDB document with its relations (as properties).
 
 export default class Document {
   _id: ?string;
@@ -46,8 +48,11 @@ export default class Document {
     Object.assign(this, mongoDoc);
   }
 
+  get(attributeName: string) {
+    return this._attributes[attributeName];
+  }
 
-  static relations(includeSuperclassRelations = true): TypesToRelationMaps {
+  static relations(includeSuperclassRelations: boolean = true): TypesToRelationMaps {
     if (!Object.prototype.propertyIsEnumerable.call(this, 'relationsWithoutSuperclassRelations')) {
       this.relationsWithoutSuperclassRelations = { belongsTo: {}, hasMany: {} };
     }
@@ -56,50 +61,79 @@ export default class Document {
       return this.prototypeChain()
         .reverse()
         .map(DocumentSubclass => DocumentSubclass.relationsWithoutSuperclassRelations)
-        .reduce(Object.assign, {});
+        .reduce((prev, next, index, array) => Object.assign(prev, next), {});
+    }
+
+    if (!this.relationsWithoutSuperclassRelations) {
+      throw new Error('relationsWithoutSuperclassRelations not defined. This should not happen.');
     }
 
     return this.relationsWithoutSuperclassRelations;
   }
 
 
-  // Relation DSL
+  // Returns a named belongs-to relation, if the definition exists.
+  //
+  // Set `includeSuperclassRelations` to false if you want to get back `null` if the relation is not
+  // defined directly on the Document subclass that you call this on.
 
-  static belongsToRelation(name: string, includeSuperclassRelations = true): BelongsToRelation<*, *> {
+  static belongsToRelation(name: string, includeSuperclassRelations: boolean = true): BelongsToRelation<*, *> {
     return this.belongsToRelations(includeSuperclassRelations)[name];
   }
 
+  // Returns a named has-many relation, if the definition exists.
+  //
+  // Set `includeSuperclassRelations` to false if you want to get back `null` if the relation is not
+  // defined directly on the Document subclass that you call this on.
 
-  static hasManyRelation(name: string, includeSuperclassRelations = true): HasManyRelation<*, *> {
+  static hasManyRelation(name: string, includeSuperclassRelations: boolean = true): HasManyRelation<*, *> {
     return this.hasManyRelations(includeSuperclassRelations)[name];
   }
 
+  // Returns all defined has-many relations.
+  //
+  // Set `includeSuperclassRelations` to false if you want to get back `null` if the relation is not
+  // defined directly on the Document subclass that you call this on.
 
-  static hasManyRelations(includeSuperclassRelations = true): HasManyRelationMap {
+  static hasManyRelations(includeSuperclassRelations: boolean = true): HasManyRelationMap {
     return this.relations(includeSuperclassRelations).hasMany || {};
   }
 
+  // Returns all defined belongs-to relations.
+  //
+  // Set `includeSuperclassRelations` to false if you want to get back `null` if the relation is not
+  // defined directly on the Document subclass that you call this on.
 
-  static belongsToRelations(includeSuperclassRelations = true): BelongsToRelationMap {
+  static belongsToRelations(includeSuperclassRelations: boolean = true): BelongsToRelationMap {
     return this.relations(includeSuperclassRelations).belongsTo || {};
   }
 
 
   // Defines belongs-to relations to other documents.
   //
-  // You can define a selector to limit allowed documents to a certain
-  // scope that is validated when a document is saved.
+  // A belongs-to relation means that database documents of this class can have a property with an
+  // ID reference to a document of a second collection. Usually, there is an inverse has-many
+  // relation on the second collection that ‘points back’. A bank account can *belong to* an owner,
+  // in the same way the owner *has many* bank accounts.
   //
-  //   owner = this.belongsTo('owner', {
-  //     collection: Model.c.users,
-  //     required: true,
-  //     selector: { hasPaidMembership: true },
-  //   });
+  // You can define a selector to limit fetched documents to a certain scope.
   //
-  // Adding a belongs-to relations automatically adds reactive getters
-  // with the same names to your Doc instances (e.g.
-  // `myDocument.ownerDocument()` and `myDocument.catalogItemDocument()`
-  // for the previous example)
+  // Example:
+  //
+  //     class BankAccount extends Document {
+  //       owner = this.belongsTo('owner', {
+  //         collection: () => users,
+  //         selector: () => ({ hasPaidMembership: true }),
+  //       });
+  //     }
+  //
+  // Adding a belongs-to relations automatically adds getters to your `BankAccount` instances in
+  // this example, e.g. `someBankAccount.owner.findOne()`. If you construct a `BankAccount` from a
+  // database document like `{ name: 'Felix’ bank account', ownerId: 'felix' }`, this
+  // `BankAccount`’s owner would be set to the document in the users collection that has
+  // `{ _id: 'felix' }`.
+  //
+  // As a convention, all belongs-to reference properties must have the suffix `Id`.
 
   belongsTo<T: Document, ThroughT: Document>(
     relationName: string,
@@ -141,16 +175,29 @@ export default class Document {
   }
 
 
-  // Defines has-many relations from documents of this class to documents of other classes:
+  // Defines has-many relations from documents of this Document subclass to documents of other
+  // Document subclasses. Example:
   //
-  //   scans = this.hasMany('scans', {
-  //     scans: {
-  //       name: "Scans",
-  //       collection: () -> scans,
-  //     },
-  //   });
+  //     class BarcodeTag extends Document {
+  //       scans = this.hasMany('scans', {
+  //         scans: {
+  //           collection: () -> scans,
+  //           foreignKey: () => 'barcodeTagId',
+  //         },
+  //       });
+  //     }
+  //
+  // This means that a database document in the `scans` collection like `{ barcodeTagId: 'XYZ' }`
+  // would reference the barcode tag document with `{ _id: 'XYZ' }`.
+  //
+  // Adding a has-many relations automatically adds getters to your `BarcodeTag` instances in this
+  // example, e.g. `myBarcodeTag.scans.find().fetch()`.
+  //
+  // Usually a has-many relation has an inverse belongs-to relation definition on the referenced
+  // document class. In the above example, this means you would additionally add a `barcodeTag`
+  // belongs-to relation on a `Scan` document subclass.
 
-  hasMany<T: Document, ThroughT>(
+  hasMany<T: Document, ThroughT: Document>(
     relationName: string,
     description: HasManyRelationDescription<T, ThroughT>,
   ): HasManyRelation<T, ThroughT> {
@@ -170,12 +217,6 @@ export default class Document {
       return this.hasManyCursorForRelation(relation, options || relation.options.call(this));
     }
 
-    function findOneUnbound(options?: {}): ?T {
-      if (!relation) throw new Error('Relation must initialized before use'); // should never happen
-      const selector = this.hasManyCursorForRelation(relation, options);
-      return relation.collection().findOne(selector, options || relation.options.call(this));
-    }
-
     const baseRelation = generateRelationFromDescription(relationName, true, description);
 
     const defaults: HasManyRelation<T, ThroughT> = Object.assign({}, baseRelation, {
@@ -183,8 +224,6 @@ export default class Document {
       nullifyForeignRelations: () => false,
       findUnbound,
       find: findUnbound.bind(this),
-      findOneUnbound,
-      findOne: findOneUnbound.bind(this),
     });
 
     relation = Object.assign(defaults, description);
@@ -246,11 +285,15 @@ export default class Document {
     extendedOptions: {} = {},
   ): MongoCompatibleCursor<T> {
     const collection: MongoCompatibleCollection<T> = relation.collection();
-    let foreignKey = addIdSuffixIfNecessary(relation.foreignKey());
+    let foreignKey = relation.foreignKey && relation.foreignKey();
+    if (!foreignKey) throw new Error(`${relation.humanName} relation must have a defined foreign key`);
+    foreignKey = addIdSuffixIfNecessary(foreignKey);
     const throughCollection: ?MongoCompatibleCollection<ThroughT> = relation.through && relation.through();
     let throughIds: ?string[];
     if (throughCollection) {
-      let throughForeignKey = addIdSuffixIfNecessary(relation.throughForeignKey());
+      let throughForeignKey = relation.throughForeignKey && relation.throughForeignKey();
+      if (!throughForeignKey) throw new Error(`${relation.humanName} relation must have a defined foreign key for ‘through’ collection`);
+      throughForeignKey = addIdSuffixIfNecessary(throughForeignKey);
       throughIds = throughCollection
         .find({ [throughForeignKey]: this._id }, { fields: { _id: 1 }, transform: null })
         .map(doc => doc._id).filter(Boolean);

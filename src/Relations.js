@@ -14,9 +14,8 @@ export type Relation<T, ThroughT> = {
   selector: () => {},
   options: () => {},
   through?: () => MongoCompatibleCollection<ThroughT>,
-  foreignKey: () => $Keys<typeof T>,
-  throughForeignKey: () => $Keys<typeof ThroughT>,
-  name: string,
+  foreignKey: () => string,
+  throughForeignKey: () => string,
   humanName: string,
   humanNameSingular: string,
   humanNamePlural: string,
@@ -30,7 +29,6 @@ export type RelationDescription<T, ThroughT> = {
   collection: () => MongoCompatibleCollection<T>,
   selector?: () => {},
   options?: () => {},
-  name: string,
   humanName?: string,
   humanNameSingular?: string,
   humanNamePlural?: string,
@@ -38,8 +36,8 @@ export type RelationDescription<T, ThroughT> = {
   humanCollectionNameSingular?: () => string,
   helpText?: () => string,
   through?: () => MongoCompatibleCollection<ThroughT>,
-  foreignKey?: () => $Keys<typeof T>,
-  throughForeignKey?: () => $Keys<typeof ThroughT>,
+  foreignKey?: () => string,
+  throughForeignKey?: () => string,
 };
 
 
@@ -47,7 +45,6 @@ export type BelongsToRelationDescription<T, ThroughT> = {
   collection: () => MongoCompatibleCollection<T>,
   selector?: () => {},
   options?: () => {},
-  name: string,
   humanName?: string,
   humanNameSingular?: string,
   humanNamePlural?: string,
@@ -55,8 +52,8 @@ export type BelongsToRelationDescription<T, ThroughT> = {
   humanCollectionNameSingular?: () => string,
   helpText?: () => string,
   through?: () => MongoCompatibleCollection<ThroughT>,
-  foreignKey?: () => $Keys<typeof T>,
-  throughForeignKey?: () => $Keys<typeof ThroughT>,
+  foreignKey?: () => string,
+  throughForeignKey?: () => string,
   required?: () => boolean,
   placeholder?: () => string,
   index?: number | string | {},
@@ -67,7 +64,6 @@ export type BelongsToRelation<T, ThroughT> = {
   collection: () => MongoCompatibleCollection<T>,
   selector: () => {},
   options: () => {},
-  name: string,
   humanName: string,
   humanNameSingular: string,
   humanNamePlural: string,
@@ -75,8 +71,8 @@ export type BelongsToRelation<T, ThroughT> = {
   humanCollectionNameSingular: () => string,
   helpText: () => string,
   through?: () => MongoCompatibleCollection<ThroughT>,
-  foreignKey: () => $Keys<typeof T>,
-  throughForeignKey: () => $Keys<typeof ThroughT>,
+  foreignKey: () => string,
+  throughForeignKey: () => string,
   required: () => boolean,
   findOneUnbound: (options?: {}) => ?T,
   findOne: (options?: {}) => ?T,
@@ -90,9 +86,8 @@ export type HasManyRelationDescription<T, ThroughT> = {
   selector?: () => {},
   options?: () => {},
   through?: () => MongoCompatibleCollection<ThroughT>,
-  foreignKey?: () => $Keys<typeof T>,
-  throughForeignKey?: () => $Keys<typeof ThroughT>,
-  name: string,
+  foreignKey?: () => string,
+  throughForeignKey?: () => string,
   humanName?: string,
   humanNameSingular?: string,
   humanNamePlural?: string,
@@ -108,9 +103,8 @@ export type HasManyRelation<T, ThroughT> = {
   selector: () => {},
   options: () => {},
   through?: () => MongoCompatibleCollection<ThroughT>,
-  foreignKey: () => $Keys<typeof T>,
-  throughForeignKey: () => $Keys<typeof ThroughT>,
-  name: string,
+  foreignKey?: () => string,
+  throughForeignKey: () => string,
   humanName: string,
   humanNameSingular: string,
   humanNamePlural: string,
@@ -119,8 +113,6 @@ export type HasManyRelation<T, ThroughT> = {
   helpText: () => string,
   findUnbound: (options?: {}) => MongoCompatibleCursor<T>,
   find: (options?: {}) => MongoCompatibleCursor<T>,
-  findOneUnbound: (options?: {}) => ?T,
-  findOne: (options?: {}) => ?T,
   nullifyForeignRelations: () => boolean,
 };
 
@@ -137,16 +129,21 @@ export function generateRelationFromDescription<T, ThroughT>(
   const humanNamePlural = relationNameIsPlural ? humanName : mPluralize(humanName);
   const through = description.through;
 
+  let foreignKey = description.foreignKey || collectionSingularName;
+  if (through) {
+    foreignKey = () => mSingularize(through()._name);
+  }
+
   return Object.assign({
     collection: description.collection,
     through: description.through,
     name: relationName,
+    foreignKey,
     humanName,
     humanNamePlural,
     humanNameSingular,
     humanCollectionName: () => mHumanize(collectionName()),
     humanCollectionNameSingular: () => mHumanize(collectionSingularName()),
-    foreignKey: through ? (() => mSingularize(through()._name)) : (() => collectionSingularName),
     throughForeignKey: through ?
       () => through ? mSingularize(through()._name) : null
     :

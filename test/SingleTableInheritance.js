@@ -2,4 +2,4 @@
 
 import test from 'ava';
 
-test.todo('Relations return correct documents when using single table inheritance');
+// test.todo('Relations return correct documents when using single table inheritance');

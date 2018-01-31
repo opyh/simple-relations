@@ -1,7 +1,8 @@
 // @flow
 
 import SimpleSchema from 'simpl-schema';
-import type {
+
+export type {
   BelongsToRelation,
   BelongsToRelationMap,
   BelongsToRelationDescription,
@@ -12,16 +13,10 @@ import type {
   RelationMap,
 } from './Relations';
 
+import Document from './Document';
+import Model from './Model';
 
-type WithRelationProperties<T> = {
-  ...T,
-  relations: {},
+export {
+  Document,
+  Model
 };
-
-
-export function addRelationPropertiesToDocument<T: {}>(doc: T): WithRelationProperties<T> {
-  const relationProperties = {
-    relations: {},
-  };
-  return Object.assign({}, doc, relationProperties);
-}
