@@ -1,13 +1,29 @@
 // @flow
 
-import type { MongoCompatibleCollection, MongoCompatibleCursor } from '../../src/MongoInterface';
+import includes from 'lodash/includes';
 import Document from '../../src/Document';
+import type {
+  MongoCompatibleCollection,
+  MongoCompatibleCursor
+} from '../../src/MongoInterface';
 
-// Only supports very simple selectors
-function isMatchingSelector(selector, doc) {
+// Creates a collection that has a stripped-down interface of a MongoDB collection.
+
+
+// Only supports very simple selectors.
+function isMatchingSelector(selector, doc): boolean {
   const keys = Object.keys(selector);
-  const result = !keys.find(key => doc._attributes[key] !== selector[key]);
-  console.log('Match', selector, doc._attributes, '->', result);
+  const result = !keys.find(key => {
+    const expectedValue = selector[key];
+    const actualValue = doc._attributes[key];
+    if (typeof expectedValue === 'object') {
+      if (expectedValue.$in) {
+        return !includes(expectedValue.$in, actualValue);
+      }
+    }
+    return actualValue !== expectedValue;
+  });
+  // console.log('Match', selector, doc._attributes, '->', result);
   return result;
 }
 
@@ -38,14 +54,12 @@ export default function createMockCollection<T: Document>(
     },
 
     find(selector?: {} = {}, options?: {} = {}): MongoCompatibleCursor<T> {
+      const filteredDocuments = documents
+        .filter(doc => isMatchingSelector(selector, doc));
       return {
-        fetch() {
-          return Object.keys(idsToDocuments)
-            .map(key => idsToDocuments[key])
-            .filter(doc => isMatchingSelector(selector, doc));
-        },
-        forEach: (fn: (T => void)) => documents.forEach(fn),
-        map: documents.map.bind(documents),
+        fetch: () => filteredDocuments,
+        forEach: filteredDocuments.forEach.bind(filteredDocuments),
+        map: filteredDocuments.map.bind(filteredDocuments),
       };
     }
   };

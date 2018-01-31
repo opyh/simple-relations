@@ -38,49 +38,50 @@ export default class Document {
     [string]: ?any;
   };
 
+  static relationsWithoutSuperclassRelations: ?TypesToRelationMaps;
+
   constructor(mongoDoc: {} = {}) {
+    this.constructor.checkAttributes(mongoDoc);
     this._attributes = mongoDoc;
     Object.assign(this, mongoDoc);
   }
 
-  static relationsWithoutSuperclassRelations: ?TypesToRelationMaps;
 
-
-  static _initializeRelations() {
+  static relations(includeSuperclassRelations = true): TypesToRelationMaps {
     if (!Object.prototype.propertyIsEnumerable.call(this, 'relationsWithoutSuperclassRelations')) {
       this.relationsWithoutSuperclassRelations = { belongsTo: {}, hasMany: {} };
     }
-  }
 
-
-  static relations(): TypesToRelationMaps {
-    this._initializeRelations();
-    if (!this.relationsWithoutSuperclassRelations) {
-      throw new Error('Relations not initialized yet. This shouldn\'t happen.');
+    if (includeSuperclassRelations) {
+      return this.prototypeChain()
+        .reverse()
+        .map(DocumentSubclass => DocumentSubclass.relationsWithoutSuperclassRelations)
+        .reduce(Object.assign, {});
     }
+
     return this.relationsWithoutSuperclassRelations;
   }
 
 
   // Relation DSL
 
-  static belongsToRelation(name: string): BelongsToRelation<*, *> {
-    return this.belongsToRelations()[name];
+  static belongsToRelation(name: string, includeSuperclassRelations = true): BelongsToRelation<*, *> {
+    return this.belongsToRelations(includeSuperclassRelations)[name];
   }
 
 
-  static hasManyRelation(name: string): HasManyRelation<*, *> {
-    return this.hasManyRelations()[name];
+  static hasManyRelation(name: string, includeSuperclassRelations = true): HasManyRelation<*, *> {
+    return this.hasManyRelations(includeSuperclassRelations)[name];
   }
 
 
-  static hasManyRelations(): HasManyRelationMap {
-    return this.relations().hasMany || {};
+  static hasManyRelations(includeSuperclassRelations = true): HasManyRelationMap {
+    return this.relations(includeSuperclassRelations).hasMany || {};
   }
 
 
-  static belongsToRelations(): BelongsToRelationMap {
-    return this.relations().belongsTo || {};
+  static belongsToRelations(includeSuperclassRelations = true): BelongsToRelationMap {
+    return this.relations(includeSuperclassRelations).belongsTo || {};
   }
 
 
@@ -197,26 +198,28 @@ export default class Document {
 
   // Used internally for storing the model's relation info. Please do
   // not call this directly.
+  //
+  // Relations are added statically to the class's prototype.
+  // If they were bound to the class, that class would be Document iteself,
+  // not the subclass that the relation is defined on.
+  //
+  // Using this pattern lets us differentiate between relations defined on
+  // each inheritance level, and also allows to sub-subclass Document
+  // while keeping track which relation has been defined on which inheritance
+  // hierarchy level.
 
   static _addRelations(typesToRelations: TypesToRelationMaps): void {
-    this._initializeRelations();
-    const existingRelations: TypesToRelationMaps = this.relations();
+    const existingRelationsAtThisClassLevel: TypesToRelationMaps = this.relations(false);
     const newRelations: TypesToRelationMaps = {};
     ['belongsTo', 'hasMany'].forEach((type: string) => {
       const relations: RelationMap = typesToRelations[type];
-      newRelations[type] = Object.assign(existingRelations[type] || {}, relations || {});
+      newRelations[type] = Object.assign(
+        existingRelationsAtThisClassLevel[type] || {},
+        relations || {}
+      );
       if (!relations) return;
-      this._addDefaultNames(relations);
     });
     this.relationsWithoutSuperclassRelations = newRelations;
-  }
-
-  // Please do not call this directly.
-  static _addDefaultNames(attrs: RelationMap) {
-    const result = Object.assign({}, attrs);
-    Object.keys(result)
-      .forEach(key => result[key].name || (result[key].name = () => mHumanize(key)));
-    return result;
   }
 
 
@@ -252,10 +255,11 @@ export default class Document {
         .find({ [throughForeignKey]: this._id }, { fields: { _id: 1 }, transform: null })
         .map(doc => doc._id).filter(Boolean);
     }
+
     const selector = merge({}, relation.selector(),
       { [foreignKey]: throughIds ? { $in: throughIds } : this._id });
     const options = merge({}, relation.options(), extendedOptions);
-    // console.log('Find', collection, selector, options);
+
     return collection.find(selector, options);
   }
 
@@ -282,5 +286,22 @@ export default class Document {
 
   belongsToOptions(relationName: string): {} {
     return this.constructor.belongsToRelation(relationName).options.call(this);
+  }
+
+
+  static checkAttributes(mongoDoc) {
+    Object.keys(this.hasManyRelations())
+      .forEach(relationName => {
+        if (typeof mongoDoc[relationName] !== 'undefined') {
+          throw new Error(`Cannot construct Document: ‘${relationName}’ is no valid property. ‘${relationName}’ is already a defined has-many relation.`)
+        }
+      });
+
+    Object.keys(this.belongsToRelations())
+      .forEach(relationName => {
+        if (typeof mongoDoc[relationName] !== 'undefined') {
+          throw new Error(`Cannot construct Document: ‘${relationName}’ is no valid property, as there is a belongs-to relation with the same name. Did you mean to use ‘${relationName}Id’?`)
+        }
+      });
   }
 }

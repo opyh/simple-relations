@@ -13,9 +13,18 @@ export default class Company extends Document {
     foreignKey: () => 'owner',
   });
 
-  transactions: HasManyRelation<Transaction, Account> = this.hasMany('transactions', {
+  ingoingTransactions: HasManyRelation<Transaction, Account> = this.hasMany('incomingTransactions', {
     collection() { return Transactions; },
     through() { return Accounts; },
+    throughForeignKey: () => 'owner',
+    foreignKey: () => 'targetAccountId',
+  });
+
+  outgoingTransactions: HasManyRelation<Transaction, Account> = this.hasMany('outgoingTransactions', {
+    collection() { return Transactions; },
+    through() { return Accounts; },
+    throughForeignKey: () => 'owner',
+    foreignKey: () => 'sourceAccountId',
   });
 }
 

@@ -32,6 +32,22 @@ test('human readable collection name in singular', t => {
 	t.is(account.owner.humanCollectionNameSingular(), 'Company');
 });
 
+test('warns when constructing a Document with a property named like a has-many relation', t => {
+	const error = t.throws(() => {
+		new Account({ ingoingTransactions: 'foo' });
+	}, Error);
+
+	t.is(error.message, 'Cannot construct Document: ‘ingoingTransactions’ is no valid property. ‘ingoingTransactions’ is already a defined has-many relation.');
+});
+
+test('warns when constructing a Document with a property named like a belongs-to relation', t => {
+	const error = t.throws(() => {
+		new Account({ owner: '123' });
+	}, Error);
+
+	t.is(error.message, 'Cannot construct Document: ‘owner’ is no valid property, as there is a belongs-to relation with the same name. Did you mean to use ‘ownerId’?');
+});
+
 test.todo('supports a help text');
 
 test.todo('collection definition');

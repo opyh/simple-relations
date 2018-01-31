@@ -18,8 +18,10 @@ export default class Transaction extends Document {
 
 
 const mockTransactions = {
-  fromAToB: new Transaction({ sourceAccountId: 'a', targetAccountId: 'b' }),
-  fromBToA: new Transaction({ sourceAccountId: 'b', targetAccountId: 'a' }),
+  fromTyrellToYoyodyne1: new Transaction({ sourceAccountId: 't1', targetAccountId: 'y1' }),
+  fromTyrellToYoyodyne2: new Transaction({ sourceAccountId: 't2', targetAccountId: 'y2' }),
+  fromYoyodyneToTyrell1: new Transaction({ sourceAccountId: 'y1', targetAccountId: 't1' }),
+  fromYoyodyneToTyrell2: new Transaction({ sourceAccountId: 'y2', targetAccountId: 't2' }),
 };
 
 export const Transactions = createMockCollection('transactions', mockTransactions);

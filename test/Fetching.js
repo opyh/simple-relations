@@ -29,13 +29,23 @@ test('Finds has-many related documents', t => {
 });
 
 test('Finds has-many related documents with custom foreign key', t => {
-
+  const ingoingTransactions = yoyodynesFirstAccount.ingoingTransactions.find().fetch();
+  t.is(ingoingTransactions.length, 1);
+  t.is(ingoingTransactions[0]._id, 'fromTyrellToYoyodyne1');
 });
 
 test('Finds has-many-through related documents', t => {
+  const ingoingTransactions = tyrell.ingoingTransactions.find().fetch();
+  t.is(ingoingTransactions.length, 2);
+  t.deepEqual(
+    ingoingTransactions.map(t => t._id),
+    ['fromYoyodyneToTyrell1', 'fromYoyodyneToTyrell2']
+  );
 
-});
-
-test('Finds has-many-through related documents', t => {
-
+  const outgoingTransactions = tyrell.outgoingTransactions.find().fetch();
+  t.is(outgoingTransactions.length, 2);
+  t.deepEqual(
+    outgoingTransactions.map(t => t._id),
+    ['fromTyrellToYoyodyne1', 'fromTyrellToYoyodyne2']
+  );
 });
