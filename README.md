@@ -1,6 +1,6 @@
-# simple-mongo-relations
+# simple-relations
 
-- Adds relational data support to Meteor collections, inspired by Ruby on Rails’ `ActiveRecord`
+- Adds relational data accessors to documents in Meteor, inspired by Ruby on Rails’ `ActiveRecord`
 - Supports has-many, belongs-to and has-many-through relations
 - Creates `SimpleSchema` definitions to validate data
 - Uses FlowType
