@@ -26,13 +26,13 @@ class Account extends Document {
   ingoingTransactions: HasManyRelation<Transaction, *> = this.hasMany('ingoingTransactions', {
     collection() { return Transactions; },
     foreignKey: () => 'targetAccountId',
-    options: () => ({ sort: { insertedAt: -1 } }),
+    options: () => ({ sort: { insertedAt: -1 } }), // default options for generated cursors
   });
 
   outgoingTransactions: HasManyRelation<Transaction, *> = this.hasMany('outgoingTransactions', {
     collection() { return Transactions; },
     foreignKey: () => 'sourceAccountId',
-    options: () => ({ sort: { insertedAt: -1 } }),
+    options: () => ({ sort: { insertedAt: -1 } }),  // default options for generated cursors
   });
 }
 
@@ -53,6 +53,7 @@ const Transactions = new Meteor.Collection('Transactions', { transform: d => new
 // Generate some test data and insert it into the database
 ['a', 'b'].forEach(_id => Accounts.insert({ _id });
 Transactions.insert({ sourceAccountId: 'a', targetAccountId: 'b' });
+Transactions.insert({ sourceAccountId: 'b', targetAccountId: 'a' });
 
 // Use accessors to fetch related data from the database
 const transactions = Accounts.findOne('a').ingoingTransactions.find().fetch();
