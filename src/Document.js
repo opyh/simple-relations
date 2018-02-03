@@ -332,7 +332,7 @@ export default class Document {
   }
 
 
-  static checkAttributes(mongoDoc) {
+  static checkAttributes(mongoDoc: {}) {
     Object.keys(this.hasManyRelations())
       .forEach(relationName => {
         if (typeof mongoDoc[relationName] !== 'undefined') {
