@@ -1,7 +1,5 @@
 // @flow
 
-import SimpleSchema from 'simpl-schema';
-
 export type {
   BelongsToRelation,
   BelongsToRelationMap,
