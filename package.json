@@ -1,5 +1,5 @@
 {
-  "name": "simple-mongo-relations",
+  "name": "simple-relations",
   "version": "1.0.0",
   "description": "Define relations between MongoDB documents and get simple-to-use helpers.",
   "main": "lib/index.js",
