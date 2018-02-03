@@ -53,4 +53,6 @@ Transactions.insert({ sourceAccountId: 'a', targetAccountId: 'b' });
 
 const transactions = Accounts.findOne('a').ingoingTransactions.find().fetch();
 const account = transactions[0].sourceAccount.findOne();
+
+const AccountRelationSchema = Account.generateSimpleSchema()
 ```

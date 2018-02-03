@@ -347,4 +347,13 @@ export default class Document {
         }
       });
   }
+
+  static generateSimpleSchema(): { [string]: { type: Class<String> } } {
+    const relations = this.belongsToRelations();
+    return Object.keys(relations)
+      .map(relationName => ({
+        [addIdSuffixIfNecessary(relationName)]: { type: String }
+      }))
+      .reduce((prev, current) => Object.assign(prev, current), {});
+  }
 }
