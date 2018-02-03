@@ -21,6 +21,7 @@ import type { HasManyRelation, BelongsToRelation } from 'simple-relations';
 let Accounts;
 let Transactions;
 
+
 class Account extends Document {
   ingoingTransactions: HasManyRelation<Transaction, *> = this.hasMany('ingoingTransactions', {
     collection() { return Transactions; },
@@ -35,6 +36,7 @@ class Account extends Document {
   });
 }
 
+
 export default class Transaction extends Document {
   sourceAccount: BelongsToRelation<Account, *> = this.belongsTo('sourceAccount', {
     collection: () => Accounts,
@@ -45,14 +47,17 @@ export default class Transaction extends Document {
   });
 }
 
-Accounts = new Meteor.Collection('Accounts', { transform: d => new Account(d) });
-Transactions = new Meteor.Collection('Transactions', { transform: d => new Transaction(d) });
+const Accounts = new Meteor.Collection('Accounts', { transform: d => new Account(d) });
+const Transactions = new Meteor.Collection('Transactions', { transform: d => new Transaction(d) });
 
+// Generate some test data and insert it into the database
 ['a', 'b'].forEach(_id => Accounts.insert({ _id });
 Transactions.insert({ sourceAccountId: 'a', targetAccountId: 'b' });
 
+// Use accessors to fetch related data from the database
 const transactions = Accounts.findOne('a').ingoingTransactions.find().fetch();
 const account = transactions[0].sourceAccount.findOne();
 
-const AccountRelationSchema = Account.generateSimpleSchema()
+// Creates a SimpleSchema definition object
+const TransactionSchema = Transaction.generateSimpleSchema();
 ```
