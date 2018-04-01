@@ -24,6 +24,8 @@ import {
   generateRelationFromDescription
 } from './Relations';
 
+import type { FieldValidationContext } from './FieldValidationContext';
+
 
 // Useful if somebody forgets to add an 'Id' suffix to their foreign key.
 // Memoized for speed.
@@ -41,6 +43,8 @@ export default class Document {
   };
 
   static relationsWithoutSuperclassRelations: ?TypesToRelationMaps;
+
+  static customValidationMethod: ?(() => void);
 
   constructor(mongoDoc: {} = {}) {
     this.constructor.checkAttributes(mongoDoc);
@@ -161,7 +165,7 @@ export default class Document {
     }
 
     const defaults: BelongsToRelation<T, ThroughT> = Object.assign({}, baseRelation, {
-      required: () => false,
+      optional: () => true,
       placeholder: () => '',
       findOneUnbound,
       findOne: findOneUnbound.bind(this),
@@ -348,12 +352,35 @@ export default class Document {
       });
   }
 
-  static generateSimpleSchema(): { [string]: { type: Class<String> } } {
+  static generateSimpleSchema(): {
+    [string]: {
+      type: Class<String>,
+      optional?: (() => boolean),
+      custom: (() => ?string),
+    },
+  } {
+    const emptyDoc = new this();
     const relations = this.belongsToRelations();
-    return Object.keys(relations)
-      .map(relationName => ({
-        [addIdSuffixIfNecessary(relationName)]: { type: String }
-      }))
+    return Object
+      .keys(relations)
+      .map(relationName => {
+        return {
+          [addIdSuffixIfNecessary(relationName)]: {
+            type: String,
+            optional: relations[relationName].optional || (() => false),
+            custom() {
+              if (!this.isSet) return;
+              const relation = relations[relationName];
+              const selector = Object.assign({}, relation.selector(), { _id: this.value });
+              const options = relation.options();
+              const relatedDocument = relation.collection().findOne(selector, options);
+              if (!relatedDocument) {
+                return 'notAllowed'; // eslint-disable-line consistent-return
+              }
+            }
+          }
+        };
+      })
       .reduce((prev, current) => Object.assign(prev, current), {});
   }
 }

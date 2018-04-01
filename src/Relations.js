@@ -54,7 +54,7 @@ export type BelongsToRelationDescription<T, ThroughT> = {
   through?: () => MongoCompatibleCollection<ThroughT>,
   foreignKey?: () => string,
   throughForeignKey?: () => string,
-  required?: () => boolean,
+  optional?: () => boolean,
   placeholder?: () => string,
   index?: number | string | {},
 };
@@ -73,7 +73,7 @@ export type BelongsToRelation<T, ThroughT> = {
   through?: () => MongoCompatibleCollection<ThroughT>,
   foreignKey: () => string,
   throughForeignKey: () => string,
-  required: () => boolean,
+  optional: () => boolean,
   findOneUnbound: (options?: {}) => ?T,
   findOne: (options?: {}) => ?T,
   placeholder: () => string,

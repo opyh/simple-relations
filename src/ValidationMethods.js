@@ -57,7 +57,7 @@
 //     relation: BelongsToRelation<*>,
 //     foreignId: ?string,
 //   ): void {
-//     if (relation.required()) {
+//     if (!relation.optional()) {
 //       if (!foreignId) {
 //         this.addError(relationName, { message: 'Please select', context: 'checking if attribute is there' });
 //       }

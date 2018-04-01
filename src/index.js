@@ -11,6 +11,11 @@ export type {
   RelationMap,
 } from './Relations';
 
+export type {
+  ValidationError,
+  FieldValidationContext,
+} from './FieldValidationContext';
+
 import Document from './Document';
 import Model from './Model';
 
