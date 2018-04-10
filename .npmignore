@@ -15,7 +15,6 @@ pids
 lib-cov
 
 # Directory for generated lib code
-lib
 
 # Coverage directory used by tools like istanbul
 coverage
