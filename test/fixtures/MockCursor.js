@@ -18,4 +18,8 @@ export default class MockCursor<T> {
   map<ResultT>(f: (T => ResultT)): ResultT[] {
     return this.array.map(f);
   }
+
+  count() {
+    return this.array.length;
+  }
 }

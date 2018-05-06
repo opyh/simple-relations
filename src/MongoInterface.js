@@ -4,6 +4,7 @@ export type MongoCompatibleCursor<T> = {
   fetch(): T[],
   forEach(f: (T => void)): void,
   map<U>(callbackfn: (value: T, index: number, array: any[]) => U, thisArg?: any): U[],
+  count: (() => number),
 };
 
 export type MongoCompatibleCollection<T> = {
@@ -11,5 +12,3 @@ export type MongoCompatibleCollection<T> = {
   findOne: (selector?: {} | string, options?: {}) => ?T,
   find: (selector?: {} | string, options?: {}) => MongoCompatibleCursor<T>,
 };
-
-[].map
