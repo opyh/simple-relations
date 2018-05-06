@@ -29,6 +29,7 @@ export type RelationDescription<T, ThroughT> = {
   collection: () => MongoCompatibleCollection<T>,
   selector?: () => {},
   options?: () => {},
+  name: string,
   humanName?: string,
   humanNameSingular?: string,
   humanNamePlural?: string,
