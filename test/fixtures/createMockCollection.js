@@ -64,6 +64,7 @@ export default function createMockCollection<T: Document>(
         map<U>(callbackfn: (value: T, index: number, array: any[]) => U, thisArg?: any): U[] {
           return filteredDocuments.map(callbackfn);
         },
+        count: () => filteredDocuments.length,
       };
     }
   };
