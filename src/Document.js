@@ -8,6 +8,8 @@ import type {
   MongoCompatibleCollection
 } from './MongoInterface';
 
+import EmptyCursor from './MongoInterface';
+
 import type {
   BelongsToRelation,
   BelongsToRelationMap,
@@ -218,7 +220,10 @@ export default class Document {
 
     function findUnbound(options?: {}): MongoCompatibleCursor<T> {
       if (!relation) throw new Error('Relation must initialized before use'); // should never happen
-      return this.hasManyCursorForRelation(relation, options || relation.options.call(this));
+      if (!this._id) {
+        return EmptyCursor;
+      }
+      return this.constructor.hasManyCursorForRelation(this._id, relation, options || relation.options.call(this));
     }
 
     const baseRelation = generateRelationFromDescription(relationName, true, description);
@@ -284,7 +289,8 @@ export default class Document {
   }
 
 
-  hasManyCursorForRelation<T: Document, ThroughT: Document>(
+  static hasManyCursorForRelation<T: Document, ThroughT: Document>(
+    _id: string,
     relation: HasManyRelation<T, ThroughT>,
     extendedOptions: {} = {},
   ): MongoCompatibleCursor<T> {
@@ -299,12 +305,12 @@ export default class Document {
       if (!throughForeignKey) throw new Error(`${relation.humanName} relation must have a defined foreign key for ‘through’ collection`);
       throughForeignKey = addIdSuffixIfNecessary(throughForeignKey);
       throughIds = throughCollection
-        .find({ [throughForeignKey]: this._id }, { fields: { _id: 1 }, transform: null })
+        .find({ [throughForeignKey]: _id }, { fields: { _id: 1 }, transform: null })
         .map(doc => doc._id).filter(Boolean);
     }
 
     const selector = merge({}, relation.selector(),
-      { [foreignKey]: throughIds ? { $in: throughIds } : this._id });
+      { [foreignKey]: throughIds ? { $in: throughIds } : _id });
     const options = merge({}, relation.options(), extendedOptions);
 
     return collection.find(selector, options);
@@ -312,7 +318,8 @@ export default class Document {
 
 
   hasManyCursorFor(relationName: string): MongoCompatibleCursor<Document> {
-    return this.hasManyCursorForRelation(this.constructor.hasManyRelation(relationName));
+    if (!this._id) return EmptyCursor;
+    return this.constructor.hasManyCursorForRelation(this._id, this.constructor.hasManyRelation(relationName));
   }
 
 

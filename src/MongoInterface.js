@@ -12,3 +12,10 @@ export type MongoCompatibleCollection<T> = {
   findOne: (selector?: {} | string, options?: {}) => ?T,
   find: (selector?: {} | string, options?: {}) => MongoCompatibleCursor<T>,
 };
+
+export const EmptyCursor: MongoCompatibleCursor<*> = {
+  fetch: () => [],
+  forEach: () => void,
+  map: () => [],
+  count: 0,
+}
