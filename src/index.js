@@ -16,6 +16,13 @@ export type {
   FieldValidationContext,
 } from './FieldValidationContext';
 
+
+export type {
+  MongoCompatibleCursor,
+  MongoCompatibleCollection,
+} from './MongoInterface';
+
+
 import Document from './Document';
 import Model from './Model';
 
