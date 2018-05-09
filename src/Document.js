@@ -8,7 +8,7 @@ import type {
   MongoCompatibleCollection
 } from './MongoInterface';
 
-import EmptyCursor from './MongoInterface';
+import { EmptyCursor } from './MongoInterface';
 
 import type {
   BelongsToRelation,
