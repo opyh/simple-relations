@@ -2,6 +2,7 @@
 
 import merge from 'lodash/merge';
 import memoize from 'lodash/memoize';
+import lowerFirst from 'lodash/lowerFirst';
 
 import type {
   MongoCompatibleCursor,
@@ -32,7 +33,7 @@ import type { FieldValidationContext } from './FieldValidationContext';
 // Useful if somebody forgets to add an 'Id' suffix to their foreign key.
 // Memoized for speed.
 const addIdSuffixIfNecessary = memoize(propertyName => {
-  return propertyName.match(/Id$/) ? propertyName : `${propertyName}Id`;
+  return lowerFirst(propertyName.match(/Id$/) ? propertyName : `${propertyName}Id`);
 });
 
 
