@@ -48,6 +48,7 @@ export default class Document {
   static relationsWithoutSuperclassRelations: ?TypesToRelationMaps;
 
   static customValidationMethod: ?(() => void);
+  static collection: ?(() => MongoCompatibleCollection<*>);
 
   constructor(mongoDoc: {} = {}) {
     this.constructor.checkAttributes(mongoDoc);
@@ -154,7 +155,13 @@ export default class Document {
       return ((result: any): BelongsToRelation<T, ThroughT>);
     }
 
-    const baseRelation = generateRelationFromDescription(relationName, false, description);
+    const baseRelation = generateRelationFromDescription({
+      relationName,
+      relationNameIsPlural: false,
+      description,
+      isHasManyRelation: false,
+      documentClass: this.constructor,
+    });
 
     let relation: ?BelongsToRelation<T, ThroughT>;
 
@@ -219,16 +226,24 @@ export default class Document {
 
     let relation: ?HasManyRelation<T, ThroughT>;
 
+    const documentClass = this.constructor;
+
     function findUnbound(options?: {}): MongoCompatibleCursor<T> {
       if (!relation) throw new Error('Relation must initialized before use'); // should never happen
       if (!this._id) {
         return EmptyCursor;
       }
-      return this.constructor.hasManyCursorForRelation(this._id, relation, options || relation.options.call(this));
+      return documentClass.hasManyCursorForRelation(this._id, relation, options || relation.options.call(this));
     }
 
-    const baseRelation = generateRelationFromDescription(relationName, true, description);
-
+    const baseRelation = generateRelationFromDescription({
+      relationName,
+      description,
+      documentClass,
+      relationNameIsPlural: true,
+      isHasManyRelation: true,
+    });
+    // console.log(baseRelation);
     const defaults: HasManyRelation<T, ThroughT> = Object.assign({}, baseRelation, {
       options: () => ({}),
       nullifyForeignRelations: () => false,
@@ -295,7 +310,7 @@ export default class Document {
     relation: HasManyRelation<T, ThroughT>,
     extendedOptions: {} = {},
   ): MongoCompatibleCursor<T> {
-    const collection: MongoCompatibleCollection<T> = relation.collection();
+    const targetCollection: MongoCompatibleCollection<T> = relation.collection();
     let foreignKey = relation.foreignKey && relation.foreignKey();
     if (!foreignKey) throw new Error(`${relation.humanName} relation must have a defined foreign key`);
     foreignKey = addIdSuffixIfNecessary(foreignKey);
@@ -314,7 +329,7 @@ export default class Document {
       { [foreignKey]: throughIds ? { $in: throughIds } : _id });
     const options = merge({}, relation.options(), extendedOptions);
 
-    return collection.find(selector, options);
+    return targetCollection.find(selector, options);
   }
 
 

@@ -6,11 +6,16 @@ import type { HasManyRelation } from '../../src/Relations';
 import createMockCollection from './createMockCollection';
 import Account, { Accounts } from './Account';
 import Transaction, { Transactions } from './Transaction';
+import Shareholder, { Shareholders } from './Shareholder';
 
 export default class Company extends Document {
   accounts: HasManyRelation<Account, *> = this.hasMany('accounts', {
     collection() { return Accounts; },
     foreignKey: () => 'owner',
+  });
+
+  shareholders: HasManyRelation<Shareholder, *> = this.hasMany('shareholders', {
+    collection() { return Shareholders; },
   });
 
   ingoingTransactions: HasManyRelation<Transaction, Account> = this.hasMany('incomingTransactions', {
@@ -34,3 +39,6 @@ const mockCompanies = {
 };
 
 export const Companies = createMockCollection('companies', mockCompanies);
+
+Company.collection = () => Companies;
+console.log('Collection is set to', Company.collection);

@@ -3,6 +3,7 @@ import { singularize, pluralize } from 'inflection';
 import humanize from 'underscore.string/humanize';
 import memoize from 'lodash/memoize';
 import type { MongoCompatibleCursor, MongoCompatibleCollection } from './MongoInterface';
+import type Document from './Document';
 
 export const mHumanize = memoize(humanize);
 export const mSingularize = memoize(singularize);
@@ -120,21 +121,53 @@ export type HasManyRelation<T, ThroughT> = {
 };
 
 
-export function generateRelationFromDescription<T, ThroughT>(
-  relationName: string,
-  relationNameIsPlural: boolean,
-  description: RelationDescription<T, ThroughT>,
+export function generateRelationFromDescription<T, ThroughT, SourceT>(
+  {
+    relationName,
+    relationNameIsPlural,
+    description,
+    isHasManyRelation,
+    documentClass,
+  }: {
+    relationName: string,
+    relationNameIsPlural: boolean,
+    description: RelationDescription<T, ThroughT>,
+    isHasManyRelation: boolean,
+    documentClass: Class<Document>,
+  }
 ): Relation<T, ThroughT> {
-  const collectionName = () => description.collection()._name;
-  const collectionSingularName = () => mSingularize(collectionName());
+  const through = description.through;
+  const targetCollectionNameFn = () => description.collection()._name;
+  const sourceCollectionNameFn = () => {
+    if (!documentClass) throw new Error(`Source document class must be defined for has-many relation "${relationName}".`);
+    const sourceCollectionFn = documentClass.collection;
+    if (!sourceCollectionFn) throw new Error(`Source collection must be defined for has-many relation "${relationName}". Please add a 'collection' method to your ${documentClass.name} class that returns the collection.`);
+    return typeof sourceCollectionFn === 'function' && sourceCollectionFn()._name;
+  };
+  const throughCollectionNameFn = through && (() => through()._name);
+
   const humanName: string = description.humanName || mHumanize(relationName);
   const humanNameSingular = relationNameIsPlural ? mPluralize(humanName) : humanName;
   const humanNamePlural = relationNameIsPlural ? humanName : mPluralize(humanName);
-  const through = description.through;
 
-  let foreignKey = description.foreignKey || collectionSingularName;
-  if (through) {
-    foreignKey = () => mSingularize(through()._name);
+  const foreignKey: (() => string) = () => {
+    if (description.foreignKey) {
+      const customizedForeignKey = description.foreignKey();
+      if (customizedForeignKey) return customizedForeignKey;
+    }
+    if (throughCollectionNameFn) {
+      const name = throughCollectionNameFn();
+      if (name) return mSingularize(name);
+    }
+    if (isHasManyRelation) {
+      const name = sourceCollectionNameFn();
+      if (name) return mSingularize(name);
+    }
+    const name = targetCollectionNameFn();
+    if (name) {
+      return mSingularize(name);
+    }
+    throw new Error('Neither source, nor target, nor through collection seems to have a name. Huh?');
   }
 
   return Object.assign({
@@ -145,8 +178,8 @@ export function generateRelationFromDescription<T, ThroughT>(
     humanName,
     humanNamePlural,
     humanNameSingular,
-    humanCollectionName: () => mHumanize(collectionName()),
-    humanCollectionNameSingular: () => mHumanize(collectionSingularName()),
+    humanCollectionName: () => mHumanize(targetCollectionNameFn()),
+    humanCollectionNameSingular: () => mHumanize(mSingularize(targetCollectionNameFn())),
     throughForeignKey: through ?
       () => through ? mSingularize(through()._name) : null
     :

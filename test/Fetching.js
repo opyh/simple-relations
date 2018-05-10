@@ -8,9 +8,11 @@ import Company, { Companies } from './fixtures/Company';
 
 const yoyodynesFirstAccount: ?Account = Accounts.findOne('y1');
 const tyrell: ?Company = Companies.findOne('tyrell');
+const yoyodyne: ?Company = Companies.findOne('yoyodyne');
 
 if (!yoyodynesFirstAccount) throw new Error('Mock account must exist');
-if (!tyrell) throw new Error('Mock company must exist');
+if (!tyrell) throw new Error('Mock company `tyrell` must exist');
+if (!yoyodyne) throw new Error('Mock company `yoyodyne` must exist');
 
 
 test('Finds a belongs-to related document', t => {
@@ -39,6 +41,16 @@ test('Finds has-many related documents', t => {
   t.deepEqual(ids, ['t1', 't2']);
 });
 
+
+test('Finds has-many related documents with automatic foreign key', t => {
+const tyrellShareholders = tyrell.shareholders.find().fetch();
+  t.is(tyrellShareholders.length, 2);
+  t.is(tyrellShareholders[0].get('name'), 'Alice');
+  t.is(tyrellShareholders[1].get('name'), 'Bob');
+
+  const yoyodyneShareholders = yoyodyne.shareholders.find().fetch();
+  t.is(yoyodyneShareholders.length, 0);
+});
 
 test('Finds has-many related documents with custom foreign key', t => {
   const ingoingTransactions = yoyodynesFirstAccount.ingoingTransactions.find().fetch();
