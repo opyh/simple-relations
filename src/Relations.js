@@ -2,13 +2,19 @@
 import { singularize, pluralize } from 'inflection';
 import humanize from 'underscore.string/humanize';
 import memoize from 'lodash/memoize';
+import lowerFirst from 'lodash/lowerFirst';
 import type { MongoCompatibleCursor, MongoCompatibleCollection } from './MongoInterface';
 import type Document from './Document';
 
-export const mHumanize = memoize(humanize);
-export const mSingularize = memoize(singularize);
-export const mPluralize = memoize(pluralize);
+export const mHumanize: ((string) => string) = memoize(humanize);
+export const mSingularize: ((string) => string) = memoize(singularize);
+export const mPluralize: ((string) => string) = memoize(pluralize);
 
+// Useful if somebody forgets to add an 'Id' suffix to their foreign key.
+// Memoized for speed.
+export const addIdSuffixIfNecessary = memoize((propertyName: string) => {
+  return lowerFirst(propertyName.match(/Id$/) ? propertyName : `${propertyName}Id`);
+});
 
 export type Relation<T, ThroughT> = {
   collection: () => MongoCompatibleCollection<T>,
@@ -155,17 +161,18 @@ export function generateRelationFromDescription<T, ThroughT, SourceT>(
       const customizedForeignKey = description.foreignKey();
       if (customizedForeignKey) return customizedForeignKey;
     }
+    let name;
     if (throughCollectionNameFn) {
-      const name = throughCollectionNameFn();
-      if (name) return mSingularize(name);
+      name = throughCollectionNameFn();
     }
-    if (isHasManyRelation) {
-      const name = sourceCollectionNameFn();
-      if (name) return mSingularize(name);
+    if (!name && isHasManyRelation) {
+      name = sourceCollectionNameFn();
     }
-    const name = targetCollectionNameFn();
+    if (!name) {
+      name = targetCollectionNameFn();
+    }
     if (name) {
-      return mSingularize(name);
+      return addIdSuffixIfNecessary(mSingularize(name));
     }
     throw new Error('Neither source, nor target, nor through collection seems to have a name. Huh?');
   }

@@ -11,30 +11,22 @@ import type {
 
 import { EmptyCursor } from './MongoInterface';
 
-import type {
-  BelongsToRelation,
-  BelongsToRelationMap,
-  BelongsToRelationDescription,
-  HasManyRelation,
-  HasManyRelationMap,
-  HasManyRelationDescription,
-  TypesToRelationMaps,
-  RelationMap,
-} from './Relations';
-
 import {
   mHumanize,
-  generateRelationFromDescription
+  addIdSuffixIfNecessary,
+  generateRelationFromDescription,
+
+  type BelongsToRelation,
+  type BelongsToRelationMap,
+  type BelongsToRelationDescription,
+  type HasManyRelation,
+  type HasManyRelationMap,
+  type HasManyRelationDescription,
+  type TypesToRelationMaps,
+  type RelationMap,
 } from './Relations';
 
 import type { FieldValidationContext } from './FieldValidationContext';
-
-
-// Useful if somebody forgets to add an 'Id' suffix to their foreign key.
-// Memoized for speed.
-const addIdSuffixIfNecessary = memoize(propertyName => {
-  return lowerFirst(propertyName.match(/Id$/) ? propertyName : `${propertyName}Id`);
-});
 
 
 // Represents a MongoDB document with its relations (as properties).
