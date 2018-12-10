@@ -20,7 +20,10 @@ test('Generates a SimpleSchema definition', t => {
     if (typeof schema.optional !== 'function') {
       throw new Error('`optional` attribute must be a function');
     }
-    t.is(schema.optional(), schema === ownerIdSchema);
     t.is(typeof schema.custom, 'function');
   });
+
+  t.is(ownerIdSchema.optional(), true);
+  t.is(sourceAccountIdSchema.optional(), false);
+  t.is(targetAccountIdSchema.optional(), false);
 });

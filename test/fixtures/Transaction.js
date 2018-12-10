@@ -9,10 +9,12 @@ import createMockCollection from './createMockCollection';
 export default class Transaction extends Document {
   sourceAccount: BelongsToRelation<Account, *> = this.belongsTo('sourceAccount', {
     collection: () => Accounts,
+    optional: () => false,
   });
 
   targetAccount: BelongsToRelation<Account, *> = this.belongsTo('targetAccount', {
     collection: () => Accounts,
+    optional: () => false,
   });
 }
 
