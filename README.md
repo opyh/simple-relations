@@ -1,9 +1,12 @@
 # simple-relations
 
-- Adds relational data accessors to documents in Meteor, inspired by Ruby on Rails’ `ActiveRecord`
-- Supports has-many, belongs-to and has-many-through relations
-- Creates `SimpleSchema` definitions to validate data
-- Uses FlowType
+- Inspired by Ruby on Rails’ `ActiveRecord`
+- Provides a `Document` base class that encapsules a plain MongoDB document
+- Adds convenience data accessors like `thing.relatedOtherThings.findOne()`
+- Supports belongs-to, has-many and has-many-through relations
+- Supports `SimpleSchema`, creates schema definitions to validate relation ID attributes
+- Typed using FlowType
+- Comes with tests
 
 ## Installation
 
@@ -51,7 +54,7 @@ export default class Transaction extends Document {
 const Accounts = new Meteor.Collection('Accounts', { transform: d => new Account(d) });
 const Transactions = new Meteor.Collection('Transactions', { transform: d => new Transaction(d) });
 
-// Generate some test data and insert it into the database
+// Generate some transactions and insert them into the database
 ['a', 'b'].forEach(_id => Accounts.insert({ _id });
 Transactions.insert({ sourceAccountId: 'a', targetAccountId: 'b' });
 Transactions.insert({ sourceAccountId: 'b', targetAccountId: 'a' });
