@@ -52,7 +52,18 @@ export type RelationDescription<T, ThroughT> = {
 
 
 export type BelongsToRelationDescription<T, ThroughT> = {
-  ...RelationDescription<T, ThroughT>,
+  collection: () => MongoCompatibleCollection<T>,
+  selector?: () => {},
+  options?: () => {},
+  humanName?: string,
+  humanNameSingular?: string,
+  humanNamePlural?: string,
+  humanCollectionName?: () => string,
+  humanCollectionNameSingular?: () => string,
+  helpText?: () => string,
+  through?: () => MongoCompatibleCollection<ThroughT>,
+  foreignKey?: () => string,
+  throughForeignKey?: () => string,
   optional?: () => boolean,
   placeholder?: () => string,
   index?: number | string | {},
@@ -60,7 +71,19 @@ export type BelongsToRelationDescription<T, ThroughT> = {
 
 
 export type BelongsToRelation<T, ThroughT> = {
-  ...Relation<T, ThroughT>,
+  collection: () => MongoCompatibleCollection<T>,
+  selector: () => {},
+  options: () => {},
+  name: string,
+  humanName: string,
+  humanNameSingular: string,
+  humanNamePlural: string,
+  humanCollectionName: () => string,
+  humanCollectionNameSingular: () => string,
+  helpText: () => string,
+  through?: () => MongoCompatibleCollection<ThroughT>,
+  foreignKey: () => string,
+  throughForeignKey: () => string,
   optional: () => boolean,
   findOneUnbound: (options?: {}) => ?T,
   findOne: (options?: {}) => ?T,
@@ -70,13 +93,36 @@ export type BelongsToRelation<T, ThroughT> = {
 
 
 export type HasManyRelationDescription<T, ThroughT> = {
-  ...RelationDescription<T, ThroughT>,
+  collection: () => MongoCompatibleCollection<T>,
+  selector?: () => {},
+  options?: () => {},
+  through?: () => MongoCompatibleCollection<ThroughT>,
+  foreignKey?: () => string,
+  throughForeignKey?: () => string,
+  humanName?: string,
+  humanNameSingular?: string,
+  humanNamePlural?: string,
+  humanCollectionName?: () => string,
+  humanCollectionNameSingular?: () => string,
+  helpText?: () => string,
   nullifyForeignRelations?: () => boolean,
 };
 
 
 export type HasManyRelation<T, ThroughT> = {
-  ...Relation<T, ThroughT>,
+  collection: () => MongoCompatibleCollection<T>,
+  selector: () => {},
+  options: () => {},
+  through?: () => MongoCompatibleCollection<ThroughT>,
+  foreignKey?: () => string,
+  throughForeignKey: () => string,
+  name: string,
+  humanName: string,
+  humanNameSingular: string,
+  humanNamePlural: string,
+  humanCollectionName: () => string,
+  humanCollectionNameSingular: () => string,
+  helpText: () => string,
   findUnbound: (options?: {}) => MongoCompatibleCursor<T>,
   find: (options?: {}) => MongoCompatibleCursor<T>,
   nullifyForeignRelations: () => boolean,
