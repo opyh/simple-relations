@@ -195,6 +195,7 @@ export function generateRelationFromDescription<T, ThroughT, SourceT>(
       () => { throw new Error('Relation has no \'through\' collection set.'); },
     selector: () => ({}),
     options: () => ({}),
+    allowedIds: description.allowedIds,
     helpText: () => '',
     placeholder: () => '',
   }, description);

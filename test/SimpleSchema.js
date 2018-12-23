@@ -13,7 +13,7 @@ test('Generates a SimpleSchema definition', t => {
   const sourceAccountIdSchema = transactionSchema.sourceAccountId;
   const targetAccountIdSchema = transactionSchema.targetAccountId;
 
-  t.deepEqual(Object.keys(ownerIdSchema), ['type', 'optional', 'custom']);
+  t.deepEqual(Object.keys(ownerIdSchema), ['type', 'optional', 'allowedValues', 'custom']);
 
   [ownerIdSchema, sourceAccountIdSchema, targetAccountIdSchema].forEach(schema => {
     t.is(schema.type, String);

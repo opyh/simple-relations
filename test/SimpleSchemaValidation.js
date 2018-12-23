@@ -9,7 +9,10 @@ import type { BelongsToRelation } from '../src/Relations';
 
 
 // Setup a mock collection
-const startups = createMockCollection('startups', { FooHub: new Document({ name: 'FooHub', claim: 'Like Uber, but for quick brown foxes.' }) });
+const startups = createMockCollection('startups', {
+  FooHub: new Document({ name: 'FooHub', claim: 'Like BarHub, but for foos.' }),
+  BarHub: new Document({ name: 'BarHub', claim: 'Like FooHub, but for bars.' }),
+});
 
 // Define test configurations. Each line represents a test for a configuration of a SimpleSchema field.
 const fieldConfigurations = [
@@ -51,3 +54,21 @@ for (const config of fieldConfigurations) {
   });
 }
 
+test('belongs-to `allowedIds` are validated correctly', (t) => {
+  const Hipster = class extends Document {
+    startup: BelongsToRelation<Document, *> = this.belongsTo('startup', {
+      collection: () => startups,
+      allowedIds: () => ['FooHub'],
+    })
+  };
+
+  const schema = Hipster.generateSimpleSchema();
+  const simpleSchema = new SimpleSchema(schema);
+  const validationContext = simpleSchema.newContext();
+
+  t.is(true, validationContext.validate({ startupId: 'FooHub' }));
+  t.deepEqual(validationContext.validationErrors(), []);
+
+  t.is(false, validationContext.validate({ startupId: 'BarHub' }));
+  t.deepEqual(validationContext.validationErrors(), [ { name: 'startupId', type: 'notAllowed', value: 'BarHub' } ]);
+});

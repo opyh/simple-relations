@@ -1,6 +1,7 @@
 // @flow
 
 import merge from 'lodash/merge';
+import includes from 'lodash/includes';
 import memoize from 'lodash/memoize';
 import lowerFirst from 'lodash/lowerFirst';
 
@@ -437,18 +438,21 @@ export default class Document {
     return Object
       .keys(relations)
       .map(relationName => {
+        const relation = relations[relationName];
         return {
           [addIdSuffixIfNecessary(relationName)]: {
             type: String,
-            optional: relations[relationName].optional || (() => false),
+            optional: relation.optional || (() => false),
+            allowedValues: relation.allowedIds ? relation.allowedIds() : undefined,
             custom() {
               if (!this.isSet) return;
-              const relation = relations[relationName];
-              const selector = Object.assign({}, relation.selector(), { _id: this.value });
+
+              // Validate that referenced document exists in relation selector
+              const selector = { $and: [relation.selector(), { _id: this.value }] };
               const options = relation.options();
               const relatedDocument = relation.collection().findOne(selector, options);
               if (!relatedDocument) {
-                return 'notAllowed'; // eslint-disable-line consistent-return
+                return 'notAllowed';
               }
             }
           }

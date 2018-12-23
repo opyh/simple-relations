@@ -14,6 +14,12 @@ import type {
 function isMatchingSelector(selector: {} | string, doc): boolean {
   if (typeof selector === 'string') return doc._id === selector;
   if (typeof selector !== 'object') throw new Error('Selector must be an object or a string');
+  if (typeof selector.$and === 'object') {
+    return !selector.$and.find(subSelector => !isMatchingSelector(subSelector, doc));
+  }
+  if (typeof selector.$or === 'object') {
+    return !!selector.$or.find(subSelector => isMatchingSelector(subSelector, doc));
+  }
   const keys = Object.keys(selector);
   const result = !keys.find(key => {
     const expectedValue = selector[key];
@@ -45,27 +51,24 @@ export default function createMockCollection<T: Document>(
     documents.push(doc);
   });
 
+  const find = (selector?: {} | string = {}, options?: {} = {}): MongoCompatibleCursor<T> => {
+    const filteredDocuments: T[] = documents
+      .filter(doc => isMatchingSelector(selector, doc));
+    return {
+      fetch: () => filteredDocuments,
+      forEach: filteredDocuments.forEach.bind(filteredDocuments),
+      map<U>(callbackfn: (value: T, index: number, array: any[]) => U, thisArg?: any): U[] {
+        return filteredDocuments.map(callbackfn);
+      },
+      count: () => filteredDocuments.length,
+    };
+  }
+
   return {
     _name: name,
-
+    find,
     findOne(selector?: {} | string, options?: {}): ?T {
-      if (!selector) return idsToDocuments[Object.keys(idsToDocuments)[0]];
-      if (typeof selector === 'string') return idsToDocuments[selector];
-      if (typeof selector._id === 'string') return idsToDocuments[selector._id];
-      return null;
+      return find(selector, options).fetch()[0] || null;
     },
-
-    find(selector?: {} | string = {}, options?: {} = {}): MongoCompatibleCursor<T> {
-      const filteredDocuments: T[] = documents
-        .filter(doc => isMatchingSelector(selector, doc));
-      return {
-        fetch: () => filteredDocuments,
-        forEach: filteredDocuments.forEach.bind(filteredDocuments),
-        map<U>(callbackfn: (value: T, index: number, array: any[]) => U, thisArg?: any): U[] {
-          return filteredDocuments.map(callbackfn);
-        },
-        count: () => filteredDocuments.length,
-      };
-    }
   };
 }
