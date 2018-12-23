@@ -67,6 +67,7 @@ export type BelongsToRelationDescription<T, ThroughT> = {
   optional?: () => boolean,
   placeholder?: () => string,
   index?: number | string | {},
+  allowedIds?: () => string[],
 };
 
 
@@ -89,6 +90,7 @@ export type BelongsToRelation<T, ThroughT> = {
   findOne: (options?: {}) => ?T,
   placeholder: () => string,
   index?: number | string | {},
+  allowedIds?: () => string[],
 };
 
 
