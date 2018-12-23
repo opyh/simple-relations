@@ -1,6 +1,6 @@
 // @flow
 
-import test from 'ava';
+
 import omit from 'lodash/omit';
 import SimpleSchema from 'simpl-schema';
 import createMockCollection from './fixtures/createMockCollection';
@@ -27,7 +27,7 @@ const fieldConfigurations = [
 
 let i = 0;
 for (const config of fieldConfigurations) {
-  test(`Validation case ${i += 1}: ${JSON.stringify(config.error)} result for validating belongs-to relation with setup ${JSON.stringify(omit(config, 'error'))}`, (t) => {
+  test(`Validation case ${i += 1}: ${JSON.stringify(config.error)} result for validating belongs-to relation with setup ${JSON.stringify(omit(config, 'error'))}`, async () => {
     const Hipster = class extends Document {
       startup: BelongsToRelation<Document, *> = this.belongsTo('startup', {
         collection: () => startups,
@@ -44,17 +44,17 @@ for (const config of fieldConfigurations) {
     const simpleSchema = new SimpleSchema(schema);
     const validationContext = simpleSchema.newContext();
     const isValid = validationContext.validate(hipsterProperties);
-    t.is(isValid, !config.error);
+    expect(isValid).toEqual(!config.error);
     if (config.error) {
       const expectedValue = (config.isSet ? 'Wrongly' : undefined);
-      t.deepEqual(validationContext.validationErrors(), [{ name: 'startupId', type: config.error, value: expectedValue }]);
+      expect(validationContext.validationErrors()).toMatchObject([{ name: 'startupId', type: config.error, value: expectedValue }]);
     } else {
-      t.deepEqual(validationContext.validationErrors(), []);
+      expect(validationContext.validationErrors()).toMatchObject([]);
     }
   });
 }
 
-test('belongs-to `allowedIds` are validated correctly', (t) => {
+test('belongs-to `allowedIds` are validated correctly', async () => {
   const Hipster = class extends Document {
     startup: BelongsToRelation<Document, *> = this.belongsTo('startup', {
       collection: () => startups,
@@ -66,9 +66,9 @@ test('belongs-to `allowedIds` are validated correctly', (t) => {
   const simpleSchema = new SimpleSchema(schema);
   const validationContext = simpleSchema.newContext();
 
-  t.is(true, validationContext.validate({ startupId: 'FooHub' }));
-  t.deepEqual(validationContext.validationErrors(), []);
+  expect(validationContext.validate({ startupId: 'FooHub' })).toBe(true);
+  expect(validationContext.validationErrors()).toHaveLength(0);
 
-  t.is(false, validationContext.validate({ startupId: 'BarHub' }));
-  t.deepEqual(validationContext.validationErrors(), [ { name: 'startupId', type: 'notAllowed', value: 'BarHub' } ]);
+  expect(validationContext.validate({ startupId: 'BarHub' })).toBe(false);
+  expect(validationContext.validationErrors()).toEqual([ { name: 'startupId', type: 'notAllowed', value: 'BarHub' } ]);
 });

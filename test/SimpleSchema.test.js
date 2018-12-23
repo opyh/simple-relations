@@ -1,29 +1,29 @@
 // @flow
 
-import test from 'ava';
+
 import SimpleSchema from 'simpl-schema';
 
 import Account from './fixtures/Account';
 import Transaction from './fixtures/Transaction';
 
-test('Generates a SimpleSchema definition', t => {
+test('Generates a SimpleSchema definition', async () => {
   const accountSchema = Account.generateSimpleSchema();
   const transactionSchema = Transaction.generateSimpleSchema();
   const ownerIdSchema = accountSchema.ownerId;
   const sourceAccountIdSchema = transactionSchema.sourceAccountId;
   const targetAccountIdSchema = transactionSchema.targetAccountId;
 
-  t.deepEqual(Object.keys(ownerIdSchema), ['type', 'optional', 'allowedValues', 'custom']);
+  expect(Object.keys(ownerIdSchema)).toEqual(['type', 'optional', 'allowedValues', 'custom']);
 
   [ownerIdSchema, sourceAccountIdSchema, targetAccountIdSchema].forEach(schema => {
-    t.is(schema.type, String);
+    expect(schema.type).toBe(String);
     if (typeof schema.optional !== 'function') {
       throw new Error('`optional` attribute must be a function');
     }
-    t.is(typeof schema.custom, 'function');
+    expect(typeof schema.custom).toBe('function');
   });
 
-  t.is(ownerIdSchema.optional(), true);
-  t.is(sourceAccountIdSchema.optional(), false);
-  t.is(targetAccountIdSchema.optional(), false);
+  expect(ownerIdSchema.optional()).toBe(true);
+  expect(sourceAccountIdSchema.optional()).toBe(false);
+  expect(targetAccountIdSchema.optional()).toBe(false);
 });
