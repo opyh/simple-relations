@@ -173,7 +173,7 @@ export function generateRelationFromDescription<T, ThroughT, SourceT>(
       name = sourceCollectionNameFn();
     }
     if (!name) {
-      name = targetCollectionNameFn();
+      name = relationName;
     }
     if (name) {
       return addIdSuffixIfNecessary(mSingularize(name));
