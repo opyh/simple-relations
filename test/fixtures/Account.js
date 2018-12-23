@@ -41,4 +41,4 @@ const mockAccounts = {
   }),
 };
 
-export const Accounts = createMockCollection('accounts', mockAccounts);
+export const Accounts = createMockCollection<Account>('accounts', mockAccounts);

@@ -38,6 +38,6 @@ const mockCompanies = {
   yoyodyne: new Company({ name: 'Yoyodyne, Inc.' }),
 };
 
-export const Companies = createMockCollection('companies', mockCompanies);
+export const Companies = createMockCollection<Company>('companies', mockCompanies);
 
 Company.collection = () => Companies;

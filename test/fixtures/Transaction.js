@@ -26,4 +26,4 @@ const mockTransactions = {
   fromYoyodyneToTyrell2: new Transaction({ sourceAccountId: 'y2', targetAccountId: 't2' }),
 };
 
-export const Transactions = createMockCollection('transactions', mockTransactions);
+export const Transactions = createMockCollection<Transaction>('transactions', mockTransactions);

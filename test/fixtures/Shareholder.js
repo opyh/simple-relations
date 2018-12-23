@@ -17,4 +17,4 @@ const mockShareholders = {
   bob: new Shareholder({ name: 'Bob', companyId: 'tyrell' }),
 };
 
-export const Shareholders = createMockCollection('shareholders', mockShareholders);
+export const Shareholders = createMockCollection<Shareholder>('shareholders', mockShareholders);

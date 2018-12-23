@@ -429,7 +429,7 @@ export default class Document {
   static generateSimpleSchema(): {
     [string]: {
       type: Class<String>,
-      optional?: (() => boolean),
+      optional: (() => boolean),
       custom: (() => ?string),
     },
   } {

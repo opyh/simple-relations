@@ -9,9 +9,8 @@ import type {
 
 // Creates a collection that has a stripped-down interface of a MongoDB collection.
 
-
 // Only supports very simple selectors.
-function isMatchingSelector(selector: {} | string, doc): boolean {
+function isMatchingSelector(selector: any, doc): boolean {
   if (typeof selector === 'string') return doc._id === selector;
   if (typeof selector !== 'object') throw new Error('Selector must be an object or a string');
   if (typeof selector.$and === 'object') {
