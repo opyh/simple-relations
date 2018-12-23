@@ -1,5 +1,7 @@
 # simple-relations
 
+[![Build Status](https://travis-ci.org/opyh/simple-relations.svg?branch=master)](https://travis-ci.org/opyh/simple-relations)
+
 - Inspired by Ruby on Rails’ `ActiveRecord`
 - Provides a `Document` base class that encapsules a plain MongoDB document
 - Adds convenience data accessors like `thing.relatedOtherThings.findOne()`
