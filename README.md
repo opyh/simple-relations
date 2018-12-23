@@ -33,6 +33,7 @@ class Account extends Document {
     collection() { return Transactions; },
     foreignKey: () => 'sourceAccountId',
     options: () => ({ sort: { insertedAt: -1 } }),  // default options for generated cursors
+    allowedIds: () => ['a', 'b'] // Limits assignable IDs in generated SimpleSchema
   });
 }
 
