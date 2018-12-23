@@ -8,6 +8,9 @@ type ModelRegistry = {
   document: { [string]: Class<Document> },
 };
 
+/**
+ * A central object to register `Document` subclasses and their collections by name.
+ */
 const Model: ModelRegistry = {
   collection: {},
   document: {},

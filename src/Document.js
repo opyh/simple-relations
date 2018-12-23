@@ -29,7 +29,9 @@ import {
 import type { FieldValidationContext } from './FieldValidationContext';
 
 
-// Represents a MongoDB document with its relations (as properties).
+/**
+ * Represents a MongoDB document with its relations (as properties).
+ */
 
 export default class Document {
   _id: ?string;
@@ -40,18 +42,36 @@ export default class Document {
   static relationsWithoutSuperclassRelations: ?TypesToRelationMaps;
 
   static customValidationMethod: ?(() => void);
+  /**
+   * @returns the Document's MongoDB collection.
+   */
   static collection: ?(() => MongoCompatibleCollection<*>);
 
+  /**
+   * Initializes a `Document` object from a given MongoDB document.
+   *
+   * @param {*} mongoDoc MongoDB record with attributes of the document. A plain JS object.
+   */
   constructor(mongoDoc: {} = {}) {
     this.constructor.checkAttributes(mongoDoc);
     this._attributes = mongoDoc;
     Object.assign(this, mongoDoc);
   }
 
+  /**
+   * Gets the current value of a given document attribute.
+   *
+   * @param {string} attributeName Name of the attribute whose value should be returned
+   */
   get(attributeName: string) {
     return this._attributes[attributeName];
   }
 
+  /**
+   * Returns an object with all relations of this Document subclass, sorted by relation kind as keys.
+   *
+   * @param includeSuperclassRelations Should relations of this Document class superclasses be included in the returned relations? `true` by default.
+   */
   static relations(includeSuperclassRelations: boolean = true): TypesToRelationMaps {
     if (!Object.prototype.propertyIsEnumerable.call(this, 'relationsWithoutSuperclassRelations')) {
       this.relationsWithoutSuperclassRelations = { belongsTo: {}, hasMany: {} };
@@ -72,68 +92,82 @@ export default class Document {
   }
 
 
-  // Returns a named belongs-to relation, if the definition exists.
-  //
-  // Set `includeSuperclassRelations` to false if you want to get back `null` if the relation is not
-  // defined directly on the Document subclass that you call this on.
+  /**
+   * @returns a named belongs-to relation, if the definition exists.
+   *
+   * @param {*} name Name of the relation.
+   * @param {*} includeSuperclassRelations Set this to `false` if you want to get back `null` if the
+   * relation is not defined directly on the Document subclass that you call this on.
+   */
 
   static belongsToRelation(name: string, includeSuperclassRelations: boolean = true): BelongsToRelation<*, *> {
     return this.belongsToRelations(includeSuperclassRelations)[name];
   }
 
-  // Returns a named has-many relation, if the definition exists.
-  //
-  // Set `includeSuperclassRelations` to false if you want to get back `null` if the relation is not
-  // defined directly on the Document subclass that you call this on.
+  /**
+   * @returns a named has-many relation, if the definition exists.
+   *
+   * @param {*} name Name of the relation.
+   * @param {*} includeSuperclassRelations Set this to `false` if you want to get back `null` if the
+   * relation is not defined directly on the Document subclass that you call this on.
+   */
 
   static hasManyRelation(name: string, includeSuperclassRelations: boolean = true): HasManyRelation<*, *> {
     return this.hasManyRelations(includeSuperclassRelations)[name];
   }
 
-  // Returns all defined has-many relations.
-  //
-  // Set `includeSuperclassRelations` to false if you want to get back `null` if the relation is not
-  // defined directly on the Document subclass that you call this on.
+  /**
+   * @returns all defined has-many relations.
+   *
+   * @param {*} includeSuperclassRelations Set this to `false` if you want to get back `null` if the
+   * relation is not defined directly on the Document subclass that you call this on.
+   */
 
   static hasManyRelations(includeSuperclassRelations: boolean = true): HasManyRelationMap {
     return this.relations(includeSuperclassRelations).hasMany || {};
   }
 
-  // Returns all defined belongs-to relations.
-  //
-  // Set `includeSuperclassRelations` to false if you want to get back `null` if the relation is not
-  // defined directly on the Document subclass that you call this on.
+  /**
+   * @returns all defined belongs-to relations.
+   * @param {*} includeSuperclassRelations Set this to `false` if you want to get back `null` if the
+   * relation is not defined directly on the Document subclass that you call this on.
+   */
 
   static belongsToRelations(includeSuperclassRelations: boolean = true): BelongsToRelationMap {
     return this.relations(includeSuperclassRelations).belongsTo || {};
   }
 
 
-  // Defines belongs-to relations to other documents.
-  //
-  // A belongs-to relation means that database documents of this class can have a property with an
-  // ID reference to a document of a second collection. Usually, there is an inverse has-many
-  // relation on the second collection that ‘points back’. A bank account can *belong to* an owner,
-  // in the same way the owner *has many* bank accounts.
-  //
-  // You can define a selector to limit fetched documents to a certain scope.
-  //
-  // Example:
-  //
-  //     class BankAccount extends Document {
-  //       owner = this.belongsTo('owner', {
-  //         collection: () => users,
-  //         selector: () => ({ hasPaidMembership: true }),
-  //       });
-  //     }
-  //
-  // Adding a belongs-to relations automatically adds getters to your `BankAccount` instances in
-  // this example, e.g. `someBankAccount.owner.findOne()`. If you construct a `BankAccount` from a
-  // database document like `{ name: 'Felix’ bank account', ownerId: 'felix' }`, this
-  // `BankAccount`’s owner would be set to the document in the users collection that has
-  // `{ _id: 'felix' }`.
-  //
-  // As a convention, all belongs-to reference properties must have the suffix `Id`.
+  /**
+   * Defines belongs-to relations to other documents.
+   *
+   * A belongs-to relation means that database documents of this class can have a property with an
+   * ID reference to a document of a second collection. Usually, there is an inverse has-many
+   * relation on the second collection that ‘points back’. A bank account can *belong to* an owner,
+   * in the same way the owner *has many* bank accounts.
+   *
+   * You can define a selector to limit fetched documents to a certain scope.
+   *
+   * Adding a belongs-to relations automatically adds getters to your `BankAccount` instances in
+   * this example, e.g. `someBankAccount.owner.findOne()`. If you construct a `BankAccount` from a
+   * database document like `{ name: 'Felix’ bank account', ownerId: 'felix' }`, this
+   * `BankAccount`’s owner would be set to the document in the users collection that has
+   * `{ _id: 'felix' }`.
+   *
+   * As a convention, all belongs-to reference properties must have the suffix `Id`. If the suffix
+   * is missing, it is automatically added to the definition.
+   *
+   * @param {*} relationName Name of the new belongs-to relation
+   * @param {*} description Object describing how the relation should work
+   *
+   * @example
+   *     class BankAccount extends Document {
+   *       owner = this.belongsTo('owner', {
+   *         collection: () => users,
+   *         selector: () => ({ hasPaidMembership: true }),
+   *       });
+   *     }
+   */
 
   belongsTo<T: Document, ThroughT: Document>(
     relationName: string,
@@ -180,28 +214,33 @@ export default class Document {
     return relation;
   }
 
-
-  // Defines has-many relations from documents of this Document subclass to documents of other
-  // Document subclasses. Example:
-  //
-  //     class BarcodeTag extends Document {
-  //       scans = this.hasMany('scans', {
-  //         scans: {
-  //           collection: () -> scans,
-  //           foreignKey: () => 'barcodeTagId',
-  //         },
-  //       });
-  //     }
-  //
-  // This means that a database document in the `scans` collection like `{ barcodeTagId: 'XYZ' }`
-  // would reference the barcode tag document with `{ _id: 'XYZ' }`.
-  //
-  // Adding a has-many relations automatically adds getters to your `BarcodeTag` instances in this
-  // example, e.g. `myBarcodeTag.scans.find().fetch()`.
-  //
-  // Usually a has-many relation has an inverse belongs-to relation definition on the referenced
-  // document class. In the above example, this means you would additionally add a `barcodeTag`
-  // belongs-to relation on a `Scan` document subclass.
+  /**
+   * Defines has-many relations from documents of this Document subclass to documents of other
+   * Document subclasses.
+   *
+   * This means that a database document in the `scans` collection like `{ barcodeTagId: 'XYZ' }`
+   * would reference the barcode tag document with `{ _id: 'XYZ' }`.
+   *
+   * Adding a has-many relations automatically adds getters to your `BarcodeTag` instances in this
+   * example, e.g. `myBarcodeTag.scans.find().fetch()`.
+   *
+   * Usually a has-many relation has an inverse belongs-to relation definition on the referenced
+   * document class. In the above example, this means you would additionally add a `barcodeTag`
+   * belongs-to relation on a `Scan` document subclass.
+   *
+   * @param {*} relationName Name of the new has-many relation
+   * @param {*} description Object that describes how the new relation should work
+   *
+   * @example
+   *     class BarcodeTag extends Document {
+   *       scans = this.hasMany('scans', {
+   *         scans: {
+   *           collection: () => scans,
+   *           foreignKey: () => 'barcodeTagId',
+   *         },
+   *       });
+   *     }
+   */
 
   hasMany<T: Document, ThroughT: Document>(
     relationName: string,
@@ -252,17 +291,22 @@ export default class Document {
   }
 
 
-  // Used internally for storing the model's relation info. Please do
-  // not call this directly.
-  //
-  // Relations are added statically to the class's prototype.
-  // If they were bound to the class, that class would be Document iteself,
-  // not the subclass that the relation is defined on.
-  //
-  // Using this pattern lets us differentiate between relations defined on
-  // each inheritance level, and also allows to sub-subclass Document
-  // while keeping track which relation has been defined on which inheritance
-  // hierarchy level.
+  /**
+   * Used internally for storing the model's relation info. Please do
+   * not call this directly.
+   *
+   * Relations are added statically to the class's prototype.
+   *
+   * If they were bound to the class, that class would be `Document` iteself,
+   * not the subclass that the relation is defined on.
+   *
+   * Using this pattern lets us differentiate between relations defined on
+   * each inheritance level, and also allows to sub-subclass Document
+   * while keeping track which relation has been defined on which inheritance
+   * hierarchy level.
+   *
+   * @param {*} typesToRelations Object with the relation definitions to add
+   */
 
   static _addRelations(typesToRelations: TypesToRelationMaps): void {
     const existingRelationsAtThisClassLevel: TypesToRelationMaps = this.relations(false);
@@ -296,6 +340,15 @@ export default class Document {
     }
   }
 
+  /**
+   * @returns A MongoDB cursor with all documents in the has many relation for the document with
+   * the given `_id`.
+   *
+   * @param {*} _id `_id` of the document that the requested documents belong to.
+   * @param {*} relation reference to the relation that defines which documents should be returned
+   * @param {*} extendedOptions Additional options to add to the MongoDB query options when creating
+   * the cursor.
+   */
 
   static hasManyCursorForRelation<T: Document, ThroughT: Document>(
     _id: string,
@@ -367,6 +420,12 @@ export default class Document {
       });
   }
 
+  /**
+   * Returns a [`SimpleSchema`](https://github.com/aldeed/simple-schema-js) definition to validate
+   * documents of this class including their defined relations isomorphically and create forms using
+   * libraries like [`uniforms`](https://github.com/vazco/uniforms) or
+   * [`autoform`](https://github.com/aldeed/meteor-autoform).
+   */
   static generateSimpleSchema(): {
     [string]: {
       type: Class<String>,

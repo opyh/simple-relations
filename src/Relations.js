@@ -31,7 +31,9 @@ export type Relation<T, ThroughT> = {
   humanCollectionNameSingular: () => string,
   helpText: () => string,
 }
-
+/**
+ * Describes a relation between a document and one or more other documents.
+ */
 
 export type RelationDescription<T, ThroughT> = {
   collection: () => MongoCompatibleCollection<T>,
