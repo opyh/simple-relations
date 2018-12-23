@@ -443,7 +443,7 @@ export default class Document {
           [addIdSuffixIfNecessary(relationName)]: {
             type: String,
             optional: relation.optional || (() => false),
-            allowedValues: relation.allowedIds ? relation.allowedIds() : undefined,
+            allowedValues: relation.allowedIds,
             custom() {
               if (!this.isSet) return;
 
