@@ -41,7 +41,6 @@ export default class Document {
 
   static relationsWithoutSuperclassRelations: ?TypesToRelationMaps;
 
-  static customValidationMethod: ?(() => void);
   /**
    * @returns the Document's MongoDB collection.
    */

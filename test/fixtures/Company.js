@@ -41,4 +41,3 @@ const mockCompanies = {
 export const Companies = createMockCollection('companies', mockCompanies);
 
 Company.collection = () => Companies;
-console.log('Collection is set to', Company.collection);

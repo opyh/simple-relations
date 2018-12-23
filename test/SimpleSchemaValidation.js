@@ -40,7 +40,6 @@ for (const config of fieldConfigurations) {
     const schema = Hipster.generateSimpleSchema();
     const simpleSchema = new SimpleSchema(schema);
     const validationContext = simpleSchema.newContext();
-    console.log('schema', schema, 'props', hipsterProperties);
     const isValid = validationContext.validate(hipsterProperties);
     t.is(isValid, !config.error);
     if (config.error) {
